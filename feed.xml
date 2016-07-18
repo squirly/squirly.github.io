@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tyler Jones</title>
+    <description>I am a software developer! Here are my thoughts.
+</description>
+    <link>http://squirly.ca/</link>
+    <atom:link href="http://squirly.ca/feed.xml" rel="self" type="application/rss+xml" />
+    <pubDate>Mon, 18 Jul 2016 22:41:40 -0700</pubDate>
+    <lastBuildDate>Mon, 18 Jul 2016 22:41:40 -0700</lastBuildDate>
+    <generator>Jekyll v3.1.6</generator>
+    
+      <item>
+        <title>Presentation: Decoupling Modules and Components in Angular Using Provider</title>
+        <description>&lt;iframe width=&quot;100%&quot; height=&quot;450px&quot; frameborder=&quot;0&quot; scrolling=&quot;no&quot; marginheight=&quot;0&quot; marginwidth=&quot;0&quot; src=&quot;https://rawgit.com/squirly/630f891941bef45bb0f1/raw/6711d946df02274b1cf6ae1b63d617e9f362cce4/6presentation.html#/&quot;&gt;&lt;/iframe&gt;
+</description>
+        <pubDate>Fri, 17 Apr 2015 18:00:00 -0700</pubDate>
+        <link>http://squirly.ca/blog/2015/04/17/presentation-decoupling-modules-and-components-in-angular.html</link>
+        <guid isPermaLink="true">http://squirly.ca/blog/2015/04/17/presentation-decoupling-modules-and-components-in-angular.html</guid>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+  </channel>
+</rss>
