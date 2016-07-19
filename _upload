@@ -9,7 +9,7 @@ git checkout $DEPLOY_BRANCH
 rm -r *
 cp -r ../site_tmp/ ./
 
-git add -fA
+git add -A
 git commit --allow-empty -m "$MESSAGE"
 git push -f `git config --get remote.origin.url` $DEPLOY_BRANCH
 
