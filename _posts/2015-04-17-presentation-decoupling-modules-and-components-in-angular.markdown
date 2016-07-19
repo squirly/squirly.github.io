@@ -3,6 +3,7 @@ layout: post
 title: "Presentation: Decoupling Modules and Components in Angular Using Provider"
 date: 2015-04-17 18:00
 categories: blog
+comments: presentation-angular-providers-decoupling
 ---
 
 <iframe

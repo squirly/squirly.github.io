@@ -1,0 +1,16 @@
+DEPLOY_BRANCH=master
+MESSAGE="$(git log -1 --pretty=%B) [ci skip]"
+
+rm -r ../site_tmp
+cp -r _site/ ../site_tmp
+
+git checkout $DEPLOY_BRANCH
+
+rm -r *
+cp -r ../site_tmp/ ./
+
+git add -fA
+git commit --allow-empty -m "$MESSAGE"
+git push -f `git config --get remote.origin.url` $DEPLOY_BRANCH
+
+git checkout -
