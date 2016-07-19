@@ -6,10 +6,109 @@
 </description>
     <link>http://squirly.ca/</link>
     <atom:link href="http://squirly.ca/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Mon, 18 Jul 2016 22:41:40 -0700</pubDate>
-    <lastBuildDate>Mon, 18 Jul 2016 22:41:40 -0700</lastBuildDate>
+    <pubDate>Mon, 18 Jul 2016 23:35:27 -0700</pubDate>
+    <lastBuildDate>Mon, 18 Jul 2016 23:35:27 -0700</lastBuildDate>
     <generator>Jekyll v3.1.6</generator>
-    
+
+      <item>
+        <title>Golang: Context is Not For Dependency Injection and a Solution</title>
+        <description>&lt;p&gt;With the 1.7 release of Go in August 2016, the &lt;a href=&quot;https://tip.golang.org/pkg/context/&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;context&lt;/code&gt; package&lt;/a&gt;is added to the
+&lt;a href=&quot;https://tip.golang.org/doc/go1.7#context&quot;&gt;standard library&lt;/a&gt; and gets first class support in the &lt;a href=&quot;https://tip.golang.org/pkg/net/http/#Request.Context&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;net/http&lt;/code&gt; package&lt;/a&gt;.
+This is very exciting because it allows simplified passing of data between middleware and request handlers.
+This was possible before but required some inventive or non-intuitive techniques to achieve.
+In this blog post,
+I will go over how the &lt;a href=&quot;https://tip.golang.org/pkg/context/#Context&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt;&lt;/a&gt; type can be used for passing data in an http request,
+why it is not a construct for dependency injection, and
+a method for injecting dependencies into HTTP handlers.&lt;/p&gt;
+
+&lt;h1 id=&quot;a-basic-example-using-context&quot;&gt;A Basic Example Using Context&lt;/h1&gt;
+
+&lt;p&gt;Using &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; with &lt;code class=&quot;highlighter-rouge&quot;&gt;net/http&lt;/code&gt; in a middleware is quite simple.
+A middleware can modify a request’s context before passing it to the wrapped http handler.
+In the example for this section, a middleware that adds a passed string to the requests context will be created.
+Starting with a non working implementation that describes what needs to be done using comments:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=1a. Initial Middleware.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Modification to the context is achieved with two new methods on the &lt;a href=&quot;https://tip.golang.org/pkg/net/http/#Request&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Request&lt;/code&gt; type&lt;/a&gt;:
+A request has a method for getting its context, &lt;a href=&quot;https://tip.golang.org/pkg/net/http/#Request.Context&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Request.Context&lt;/code&gt;&lt;/a&gt;;
+and a method for returning a copy of a request with a new context, &lt;code class=&quot;highlighter-rouge&quot;&gt;Request.WithContext&lt;/code&gt;.
+Adding these two methods to the middleware:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=1b. Middleware with context.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;The only other part is to modify the context.
+Since the &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; type is immutable, a new &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; will have to be created.
+Luckily, the &lt;code class=&quot;highlighter-rouge&quot;&gt;context&lt;/code&gt; package provides a method for creating a modified copy of a &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; with the &lt;a href=&quot;https://tip.golang.org/pkg/context/#Context.WithValue&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;context.WithValue&lt;/code&gt; function&lt;/a&gt;.
+This function returns a new context Adding in the modification to the &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt;:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=1c. Middleware with context value.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Cleaning it up:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=1d. Middleware cleaned.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;To access this value in a handler function, the &lt;code class=&quot;highlighter-rouge&quot;&gt;Context.Value&lt;/code&gt; function of the request’s &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; can be used.
+A handler that responds to the request with the value set in the &lt;code class=&quot;highlighter-rouge&quot;&gt;&quot;message&quot;&lt;/code&gt; key of the context is implemented below:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=1e. Middleware handler.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Chaining this together in a main function with a few example endpoints:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=1f. Middleware useage.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;The complete example can be seen in &lt;a href=&quot;https://gist.github.com/squirly/4bd9dbd0a7d78d03b9527bdf4d0abeff&quot;&gt;using-context.go&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;context-and-dependency-injection-a-match-not-made-in-heaven&quot;&gt;Context and Dependency Injection a Match not Made in Heaven&lt;/h1&gt;
+
+&lt;p&gt;I have heard some discussion of &lt;code class=&quot;highlighter-rouge&quot;&gt;Context&lt;/code&gt; being used to pass dependencies into an &lt;code class=&quot;highlighter-rouge&quot;&gt;HttpHandler&lt;/code&gt;. This is not a good idea! Let’s explore what this will look like and evaluate why this is a bad idea.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=2. Context DI.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;As you can see, it is quite bulky to properly get the dependency from the context.
+This is also quite brittle, as each handler has to have the appropriate dependencies injected via middleware.
+If all possible dependencies are injected on every request, unnecessary overhead is added to each request, as values are added to the context and each dependency has to be converted.
+This also makes maintenance for testing difficult, as dependencies are not explicit making injection and mocking difficult.&lt;/p&gt;
+
+&lt;h1 id=&quot;dependency-injecting-http-handlers&quot;&gt;Dependency Injecting Http Handlers&lt;/h1&gt;
+&lt;p&gt;There is a simple way to have explicit and configurable dependency for http handlers, and all other modules that require dependencies. This can be achieved by adding the dependencies to the struct implementing the module. A constructor function for the module can be created that takes the dependencies of the module as parameters. This constructor and save the dependencies into the module for future use. The example in this section will illustrate this by injecting a user management service into an http handler and middleware. The dependencies in this example are defined as interfaces, this is a good practice as it will make testing simpler:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3a. struct DI sependencies.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;There are constructor functions for each dependency that takes the parameters, or dependencies required to create that dependency. This is where dependencies will be injected. The signatures for these functions is below:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3b. struct DI constructors.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;The implementations have been skipped for brevity. Mock implementations can be found in this gist, &lt;a href=&quot;https://gist.github.com/squirly/ca101d0dbe31ef77dfe0a350f981a19e&quot;&gt;user-server.go&lt;/a&gt;.
+In order for dependencies to be injected, the injector needs a place to put the dependencies. A good place for these is a struct. This struct will have parameters for all of the dependencies needed, allowing for injection. A middleware that authenticates users using basic auth can be created:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3c. struct DI auth middleware.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;To create a handler that accepts dependencies, a struct implementing &lt;code class=&quot;highlighter-rouge&quot;&gt;http.Handler&lt;/code&gt; can be created.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3d.struct DI handler.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Putting this together into a main function and linking all of the dependencies is now as simple as instantiating and injecting.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3e. struct DI example.go&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;In this example, the overhead of manually injecting dependencies is minimal. For larger applications this could become complex and a burden to maintain. One package that simplifies dependency injection is &lt;a href=&quot;https://github.com/facebookgo/inject&quot;&gt;facebookgo/inject&lt;/a&gt;. This package allows injection by passing dependencies and dependants to the library and annotating all dependencies on your structs with &lt;code class=&quot;highlighter-rouge&quot;&gt;`inject:&quot;&quot;`&lt;/code&gt;. facebookgo/inject requires that the dependencey parameters on a struct be exported, in order to allow injection. This is not the case with the example above. For this the http handler type would be rewritten:&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3f. struct DI facebookgo-inject.gog&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;There are many options for dependency injection in Go. But, before you implement, think about what you are doing and if it really is a good idea.&lt;/p&gt;
+
+&lt;p&gt;Anything need clarification? Did i get something wrong? Leave a comment or make an issue on my GitHub repo.&lt;/p&gt;
+</description>
+        <pubDate>Fri, 17 Apr 2015 18:00:00 -0700</pubDate>
+        <link>http://squirly.ca/blog/2015/04/17/golang-context-is-not-for-dependency-injection.html</link>
+        <guid isPermaLink="true">http://squirly.ca/blog/2015/04/17/golang-context-is-not-for-dependency-injection.html</guid>
+
+
+        <category>blog</category>
+
+      </item>
+
       <item>
         <title>Presentation: Decoupling Modules and Components in Angular Using Provider</title>
         <description>&lt;iframe width=&quot;100%&quot; height=&quot;450px&quot; frameborder=&quot;0&quot; scrolling=&quot;no&quot; marginheight=&quot;0&quot; marginwidth=&quot;0&quot; src=&quot;https://rawgit.com/squirly/630f891941bef45bb0f1/raw/6711d946df02274b1cf6ae1b63d617e9f362cce4/6presentation.html#/&quot;&gt;&lt;/iframe&gt;
@@ -17,11 +116,11 @@
         <pubDate>Fri, 17 Apr 2015 18:00:00 -0700</pubDate>
         <link>http://squirly.ca/blog/2015/04/17/presentation-decoupling-modules-and-components-in-angular.html</link>
         <guid isPermaLink="true">http://squirly.ca/blog/2015/04/17/presentation-decoupling-modules-and-components-in-angular.html</guid>
-        
-        
+
+
         <category>blog</category>
-        
+
       </item>
-    
+
   </channel>
 </rss>
