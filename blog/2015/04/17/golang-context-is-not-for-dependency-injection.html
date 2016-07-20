@@ -154,7 +154,7 @@ In order for dependencies to be injected, the injector needs a place to put the 
 
 <p>In this example, the overhead of manually injecting dependencies is minimal. For larger applications this could become complex and a burden to maintain. One package that simplifies dependency injection is <a href="https://github.com/facebookgo/inject">facebookgo/inject</a>. This package allows injection by passing dependencies and dependants to the library and annotating all dependencies on your structs with <code class="highlighter-rouge">`inject:""`</code>. facebookgo/inject requires that the dependencey parameters on a struct be exported, in order to allow injection. This is not the case with the example above. For this the http handler type would be rewritten:</p>
 
-<script src="https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3f. struct DI facebookgo-inject.gog"></script>
+<script src="https://gist.github.com/53dcefcae05017ccb1c8419166518b6a.js?file=3f. struct DI facebookgo-inject.go"></script>
 
 <p>There are many options for dependency injection in Go. But, before you implement, think about what you are doing and if it really is a good idea.</p>
 
