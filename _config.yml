@@ -9,3 +9,5 @@ twitter_username: squirly4
 github_username:  squirly
 
 ga_tracking_code: UA-43402257-1
+
+exclude: [bin, vendor/bundle, circle.yml]

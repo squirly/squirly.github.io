@@ -1,0 +1,21 @@
+machine:
+  environment:
+    USER_NAME: Tyler Jones
+    USER_EMAIL: tylerjones64@gmail.com
+  ruby:
+    version: 2.3.1
+
+general:
+  branches:
+    ignore:
+      - master
+
+test:
+  post:
+    - bundle exec jekyll build
+
+deployment:
+  production:
+    branch: blog
+    commands:
+      - ./bin/upload

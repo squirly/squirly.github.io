@@ -1,5 +1,5 @@
 DEPLOY_BRANCH=master
-MESSAGE="$(git log -1 --pretty=%B) [ci skip]"
+MESSAGE="$(git log -1 --pretty=%B)"
 
 rm -r ../site_tmp
 cp -r _site/ ../site_tmp
@@ -7,7 +7,10 @@ cp -r _site/ ../site_tmp
 git checkout $DEPLOY_BRANCH
 
 rm -r *
-cp -r ../site_tmp/ ./
+cp -r ../site_tmp/* ./
+
+git config user.name "$USER_NAME"
+git config user.email "$USER_EMAIL"
 
 git add -A
 git commit --allow-empty -m "$MESSAGE"

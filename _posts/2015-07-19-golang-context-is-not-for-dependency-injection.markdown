@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Golang: Context is Not For Dependency Injection and a Solution"
-date: 2016-07-17 18:00
+date: 2016-07-19 18:00
 categories: blog
 comments: golang-context-di
 gist: "53dcefcae05017ccb1c8419166518b6a"
