@@ -6,8 +6,8 @@
 </description>
     <link>http://squirly.ca/</link>
     <atom:link href="http://squirly.ca/feed.xml" rel="self" type="application/rss+xml" />
-    <pubDate>Fri, 22 Jul 2016 02:52:25 +0000</pubDate>
-    <lastBuildDate>Fri, 22 Jul 2016 02:52:25 +0000</lastBuildDate>
+    <pubDate>Mon, 25 Jul 2016 18:36:05 +0000</pubDate>
+    <lastBuildDate>Mon, 25 Jul 2016 18:36:05 +0000</lastBuildDate>
     <generator>Jekyll v3.1.6</generator>
     
       <item>
@@ -103,6 +103,76 @@ In order for dependencies to be injected, the injector needs a place to put the 
         <pubDate>Tue, 19 Jul 2016 18:00:00 +0000</pubDate>
         <link>http://squirly.ca/blog/2016/07/19/golang-context-is-not-for-dependency-injection.html</link>
         <guid isPermaLink="true">http://squirly.ca/blog/2016/07/19/golang-context-is-not-for-dependency-injection.html</guid>
+        
+        
+        <category>blog</category>
+        
+      </item>
+    
+      <item>
+        <title>Docker: Enabling Layer Caching with Distributed Continuous Integration</title>
+        <description>&lt;p&gt;When using continuous integration with docker it can be difficult to achieve proper caching.
+Especially when the build system is distributed.
+This is because you are not always using the same docker server instance or the docker images have been purged.
+This blog post details a way to preserve your docker image’s layers so that they can be cached when using a distributed continuous integration system.
+This example will use CircleCI but could be expanded to any continuous integration platform.
+Some of examples here are slightly modified versions of what is found in &lt;a href=&quot;https://circleci.com/docs/docker/&quot;&gt;CircleCi’s Docker Docs&lt;/a&gt; and is meant to supplement it.
+There are a few things that are different, these should give you an idea of the power of using continuous integration.&lt;/p&gt;
+
+&lt;p&gt;First docker needs to be enabled:
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=1.machine_services.yml&quot;&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;UPDATE: Since &lt;a href=&quot;https://github.com/docker/docker/releases/tag/v1.8.0&quot;&gt;docker 1.8.0&lt;/a&gt; this next step is no longer necessary because of the “Make build cache ignore mtime” addition!&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Next, during the checkout it can be useful to normalize the dates.
+The two bash commands below set the mtime (modified time) of each file to the time of the commit that last modified that file.
+These can be added to the post checkout section of your &lt;code class=&quot;highlighter-rouge&quot;&gt;circle.yml&lt;/code&gt; file.
+This will cause the update immediately after the code is available and before any further steps are run.
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=2.post-checkout.yml&quot;&gt;&lt;/script&gt;
+If anyone has a source on this I would be happy to add an attribution.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Continue here…&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;To be able to achieve layer caching a previous version of your docker image is needed.
+To make this image available to builds it needs to be loaded on the current docker server instance.
+Docker’s &lt;code class=&quot;highlighter-rouge&quot;&gt;save&lt;/code&gt; and &lt;code class=&quot;highlighter-rouge&quot;&gt;load&lt;/code&gt; commands give a simple way to export and import an image for this purpose.
+On CircleCI, the exported file can persisted between builds so that it can be loaded on the next build.
+Below is an example of how to do this in the dependency step of your &lt;code class=&quot;highlighter-rouge&quot;&gt;circle.yml&lt;/code&gt; file.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=3.dependencies.yml&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;It can also be useful to cache any dependencies of your tests that are also docker images.
+The example below makes redis and postgres images available for use later in the testing part of the build
+(Add the 6th and 7th line if you are using the docker caching from example above):&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=4.other_dependencies.yml&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;I would test the above to verify if it is actually faster than &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull&lt;/code&gt; for your image.
+I found that a few times a &lt;code class=&quot;highlighter-rouge&quot;&gt;docker pull&lt;/code&gt; is faster but the above example is more consistent.&lt;/p&gt;
+
+&lt;p&gt;The next thing is using these images for your test.
+Below, the database services are started with docker and the postgres database is created and initialized.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=5.database_override.yml&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Running you test using docker is now simple. The example below links in the database service from the previous example.
+The command also sets up test results to be output into the &lt;a href=&quot;https://circleci.com/docs/test-metadata/&quot;&gt;CircleCI reports directory in the required JUnit format&lt;/a&gt;.&lt;/p&gt;
+
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=6.test_override.yml&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Now the upload files can be uploaded to Docker Hub in the deployment step.
+The example below will upload all builds.
+The uploaded image will be tagged with the commit’s sha id and with the branch.
+This makes it easy to find images in the future and so that an environment can pull a specific branch if necessary.
+&lt;script src=&quot;https://gist.github.com/e79f74b2d65b4c1a9aae5b3e6d55d061.js?file=7.deployment.yml&quot;&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;I hope this provided some insight on getting docker builds running on continuous integration and expands on &lt;a href=&quot;https://circleci.com/docs/docker/&quot;&gt;CircleCi’s Docker Docs&lt;/a&gt; enough to be useful.&lt;/p&gt;
+
+&lt;p&gt;Is there anything I missed, does something need clarification, do I need to give you attribution (see above)? if so leave a comment!&lt;/p&gt;
+</description>
+        <pubDate>Sat, 20 Jun 2015 18:00:00 +0000</pubDate>
+        <link>http://squirly.ca/blog/2015/06/20/docker-layer-caching-with-ci.html</link>
+        <guid isPermaLink="true">http://squirly.ca/blog/2015/06/20/docker-layer-caching-with-ci.html</guid>
         
         
         <category>blog</category>
